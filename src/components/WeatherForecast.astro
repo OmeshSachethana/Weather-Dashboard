@@ -1,0 +1,79 @@
+---
+const { forecastData } = Astro.props;
+
+// Group forecast by day
+const getDailyForecast = (list) => {
+  const daily = {};
+  list.forEach(item => {
+    const date = new Date(item.dt * 1000).toDateString();
+    if (!daily[date]) {
+      daily[date] = [];
+    }
+    daily[date].push(item);
+  });
+  
+  return Object.entries(daily).slice(0, 5).map(([date, items]) => {
+    const temps = items.map(item => item.main.temp);
+    const weather = items[Math.floor(items.length / 2)].weather[0];
+    return {
+      date: new Date(date),
+      minTemp: Math.min(...temps),
+      maxTemp: Math.max(...temps),
+      weather,
+      icon: weather.icon
+    };
+  });
+};
+
+const dailyForecast = forecastData ? getDailyForecast(forecastData.list) : [];
+---
+
+<div class="weather-forecast mt-8">
+  {forecastData && (
+    <div class="bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-orange-600/10 
+                backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-orange-200/50 
+                dark:border-orange-800/30">
+      <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-6 
+                 flex items-center gap-3">
+        <i class="fas fa-calendar-alt text-orange-500"></i>
+        5-Day Forecast
+      </h3>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {dailyForecast.map((day, index) => (
+          <div key={index} 
+               class="bg-white/60 dark:bg-gray-800/60 rounded-2xl p-4 text-center 
+                      backdrop-blur-sm border border-orange-100 dark:border-orange-900/50 
+                      hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-300 
+                      hover:scale-105 hover:shadow-xl">
+            <div class="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {day.date.toLocaleDateString('en-US', { weekday: 'short' })}
+            </div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              {day.date.getDate()} {day.date.toLocaleDateString('en-US', { month: 'short' })}
+            </div>
+            
+            <div class="mb-3">
+              <img 
+                src={`https://openweathermap.org/img/wn/${day.icon}@2x.png`}
+                alt={day.weather.description}
+                class="w-16 h-16 mx-auto"
+              />
+            </div>
+            
+            <div class="text-lg font-bold text-gray-800 dark:text-white mb-1">
+              {Math.round(day.maxTemp)}°C
+            </div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+              {Math.round(day.minTemp)}°C
+            </div>
+            
+            <div class="mt-2 text-xs text-gray-600 dark:text-gray-400 capitalize">
+              {day.weather.description}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
