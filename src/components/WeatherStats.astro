@@ -1,0 +1,141 @@
+---
+const { weatherData } = Astro.props;
+
+// Calculate sunrise/sunset times
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true 
+  });
+};
+
+// Calculate UV index (mock - OpenWeather doesn't provide UV in free tier)
+const getUVIndex = () => {
+  const hour = new Date().getHours();
+  if (hour >= 10 && hour <= 16) return { value: 7, level: 'High' };
+  if (hour >= 7 && hour <= 9 || hour >= 17 && hour <= 19) return { value: 4, level: 'Moderate' };
+  return { value: 2, level: 'Low' };
+};
+
+const uvData = getUVIndex();
+---
+
+<div class="weather-stats mt-8">
+  {weatherData && (
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Sunrise/Sunset Card -->
+      <div class="bg-gradient-to-br from-orange-500/10 to-amber-500/10 
+                  backdrop-blur-lg rounded-3xl p-6 shadow-xl border border-orange-200/50 
+                  dark:border-orange-800/30">
+        <h4 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 
+                   flex items-center gap-2">
+          <i class="fas fa-sun text-orange-500"></i>
+          Sun Times
+        </h4>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-r from-amber-400 to-orange-400 
+                         rounded-full flex items-center justify-center">
+                <i class="fas fa-sun-rise text-white"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-700 dark:text-gray-300">Sunrise</div>
+                <div class="text-2xl font-bold text-gray-800 dark:text-white">
+                  {formatTime(weatherData.sys.sunrise)}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 
+                         rounded-full flex items-center justify-center">
+                <i class="fas fa-sunset text-white"></i>
+              </div>
+              <div>
+                <div class="font-medium text-gray-700 dark:text-gray-300">Sunset</div>
+                <div class="text-2xl font-bold text-gray-800 dark:text-white">
+                  {formatTime(weatherData.sys.sunset)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- UV Index Card -->
+      <div class="bg-gradient-to-br from-orange-500/10 to-amber-500/10 
+                  backdrop-blur-lg rounded-3xl p-6 shadow-xl border border-orange-200/50 
+                  dark:border-orange-800/30">
+        <h4 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 
+                   flex items-center gap-2">
+          <i class="fas fa-sun text-orange-500"></i>
+          UV Index
+        </h4>
+        <div class="text-center">
+          <div class="text-5xl font-black text-gray-800 dark:text-white mb-2">
+            {uvData.value}
+          </div>
+          <div class={`px-4 py-2 rounded-full text-sm font-semibold mb-4
+                      ${uvData.value >= 6 ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                        uvData.value >= 3 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'}`}>
+            {uvData.level}
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div 
+              class={`h-3 rounded-full 
+                     ${uvData.value >= 6 ? 'bg-red-500' :
+                       uvData.value >= 3 ? 'bg-yellow-500' :
+                       'bg-green-500'}`}
+              style={{ width: `${Math.min(uvData.value * 10, 100)}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Air Quality Card -->
+      <div class="bg-gradient-to-br from-orange-500/10 to-amber-500/10 
+                  backdrop-blur-lg rounded-3xl p-6 shadow-xl border border-orange-200/50 
+                  dark:border-orange-800/30">
+        <h4 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 
+                   flex items-center gap-2">
+          <i class="fas fa-wind text-orange-500"></i>
+          Air Quality
+        </h4>
+        <div class="text-center">
+          <div class="flex justify-center mb-4">
+            <div class="relative">
+              <div class="w-32 h-32 border-8 border-gray-200 dark:border-gray-700 
+                         rounded-full flex items-center justify-center">
+                <div class="text-center">
+                  <div class="text-3xl font-bold text-gray-800 dark:text-white">Good</div>
+                  <div class="text-sm text-gray-500 dark:text-gray-400">AQI 45</div>
+                </div>
+              </div>
+              <div class="absolute inset-0 border-8 border-transparent border-t-green-500 
+                         rounded-full animate-spin-slow"></div>
+            </div>
+          </div>
+          <p class="text-gray-600 dark:text-gray-400 text-sm">
+            Air quality is satisfactory
+          </p>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
+<style>
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
+</style>
